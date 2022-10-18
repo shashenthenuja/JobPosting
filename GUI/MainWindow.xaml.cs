@@ -173,9 +173,10 @@ namespace GUI
             {
                 foreach (Client c in clienList)
                 {
-                    if (c.Id.Equals(Id))
+                    if (c.Id.ToString().Equals(Id))
                     {
-                        if (item.Id.Equals(c.JobId)) {
+                        if (item.Id.Equals(c.JobId))
+                        {
                             currentJobs = currentJobs + "\n" + item.Id + " : " + item.Status;
                         }
                     }
@@ -186,10 +187,15 @@ namespace GUI
 
         public async void NetworkThread()
         {
-            Task<JobData> task = new Task<JobData>(CheckClients);
-            task.Start();
-            JobData result = await task;
-            foob.UploadJob(result);
+            do
+            {
+                Task<JobData> task = new Task<JobData>(CheckClients);
+                task.Start();
+                JobData result = await task;
+                foob.UploadJob(result);
+
+            } while (true);
+            
         }
 
         public JobData CheckClients()
@@ -218,22 +224,32 @@ namespace GUI
 
                             List<JobData> jobs = foob.GetJobs();
 
-                            if (jobs.Count > 0 )
+                            if (jobs.Count > 0)
                             {
                                 Console.WriteLine(Id + " downloading job");
                                 JobData jd = foob.DownloadJob();
-                                JobData result = DoTask(jd, item);
-                                if (result != null)
+
+                                if (jd.status.Equals("OPEN"))
                                 {
-                                    result.status = "DONE";
-                                    Job resultData = new Job();
-                                    resultData.Id = result.JobId;
-                                    resultData.Status = result.status;
-                                    RestRequest request2 = new RestRequest("api/jobs/?id=" + resultData.Id, Method.Put);
-                                    request2.AddBody(JsonConvert.SerializeObject(resultData));
-                                    restClient.Execute(request2);
-                                    Console.WriteLine("JOB COMPLETE");
-                                    return result;
+                                    Client c = new Client();
+                                    c.Id = Int32.Parse(Id);
+                                    c.Ip = cIp;
+                                    c.Port = cPort;
+                                    c.Status = "WORKING";
+                                    c.JobId = jd.JobId;
+                                    UpdateClient(c);
+                                    JobData result = DoTask(jd);
+                                    if (result != null)
+                                    {
+                                        Job resultData = new Job();
+                                        resultData.Id = result.JobId;
+                                        resultData.Status = result.status;
+                                        c.Status = "DONE";
+                                        UpdateJob(resultData);
+                                        UpdateClient(c);
+                                        Console.WriteLine(result.JobId + " : " + result.status);
+                                        return result;
+                                    }
                                 }
                             }else
                             {
@@ -246,7 +262,7 @@ namespace GUI
         }
 
 
-        public JobData DoTask(JobData jd, Client c)
+        public JobData DoTask(JobData jd)
         {
             if (jd != null && jd.status.Equals("OPEN"))
             {
@@ -271,6 +287,22 @@ namespace GUI
                 }
             }
             return null;
+        }
+
+        public void UpdateClient(Client client)
+        {
+            RestClient restClient = new RestClient("http://localhost:54662/");
+            RestRequest request = new RestRequest("api/clients/?id=" + client.Id, Method.Put);
+            request.AddBody(JsonConvert.SerializeObject(client));
+            restClient.Execute(request);
+        }
+
+        public void UpdateJob(Job job)
+        {
+            RestClient restClient = new RestClient("http://localhost:54662/");
+            RestRequest request = new RestRequest("api/jobs/?id=" + job.Id, Method.Put);
+            request.AddBody(JsonConvert.SerializeObject(job));
+            restClient.Execute(request);
         }
     }
 }

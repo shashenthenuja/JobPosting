@@ -36,6 +36,7 @@ namespace GUI
                 if (item.JobId.Equals(jd.JobId))
                 {
                     item.result = jd.result;
+                    item.status = jd.status;
                 }
             }
         }
