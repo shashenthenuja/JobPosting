@@ -14,6 +14,7 @@ namespace GUI
         public void SetJob(JobData jd)
         {
             jobs.Add(jd);
+            Console.WriteLine("Job Added [" + jobs.Count + "]");
         }
 
         public JobData DownloadJob()

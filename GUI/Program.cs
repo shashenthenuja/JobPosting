@@ -33,7 +33,7 @@ namespace GUI
             host.Close();
         }
 
-        private void addClient(ServiceHost host, NetTcpBinding tcp)
+        public void addClient(ServiceHost host, NetTcpBinding tcp)
         {
             RestClient restClient = new RestClient("http://localhost:54662/");
             RestRequest request = new RestRequest("api/clients/", Method.Get);
@@ -41,7 +41,7 @@ namespace GUI
             List<Client> clientList = JsonConvert.DeserializeObject<List<Client>>(response.Content);
 
             Console.WriteLine(">>>>>>>" + clientList.Count);
-            int index = 1;
+            int index = clientList.Count + 1;
             int portNum = rnd.Next(8000, 9000);
             string url = "net.tcp://0.0.0.0:" + portNum;
             id = index.ToString();
