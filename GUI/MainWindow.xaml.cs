@@ -157,7 +157,31 @@ namespace GUI
 
         private void viewJobs_Click(object sender, RoutedEventArgs e)
         {
+            string currentJobs="";
 
+            RestClient restClient = new RestClient("http://localhost:54662/");
+            RestRequest request = new RestRequest("api/clients/", Method.Get);
+            RestResponse response = restClient.Execute(request);
+            List<Client> clienList = JsonConvert.DeserializeObject<List<Client>>(response.Content);
+
+            
+            RestRequest request2 = new RestRequest("api/jobs/", Method.Get);
+            RestResponse response2 = restClient.Execute(request2);
+            List<Job> list = JsonConvert.DeserializeObject<List<Job>>(response2.Content);
+
+            foreach (Job item in list)
+            {
+                foreach (Client c in clienList)
+                {
+                    if (c.Id.Equals(Id))
+                    {
+                        if (item.Id.Equals(c.JobId)) {
+                            currentJobs = currentJobs + "\n" + item.Id + " : " + item.Status;
+                        }
+                    }
+                }
+            }
+            MessageBox.Show(currentJobs);
         }
 
         public async void NetworkThread()
@@ -196,10 +220,19 @@ namespace GUI
 
                             if (jobs.Count > 0 )
                             {
-                                JobData result = DoTask();
+                                Console.WriteLine(Id + " downloading job");
+                                JobData jd = foob.DownloadJob();
+                                JobData result = DoTask(jd, item);
                                 if (result != null)
                                 {
-                                    item.Status = "DONE";
+                                    result.status = "DONE";
+                                    Job resultData = new Job();
+                                    resultData.Id = result.JobId;
+                                    resultData.Status = result.status;
+                                    RestRequest request2 = new RestRequest("api/jobs/?id=" + resultData.Id, Method.Put);
+                                    request2.AddBody(JsonConvert.SerializeObject(resultData));
+                                    restClient.Execute(request2);
+                                    Console.WriteLine("JOB COMPLETE");
                                     return result;
                                 }
                             }else
@@ -213,27 +246,27 @@ namespace GUI
         }
 
 
-        public JobData DoTask()
+        public JobData DoTask(JobData jd, Client c)
         {
-            Console.WriteLine(Id + " downloading job");
-
-            JobData jd = foob.DownloadJob();
-
             if (jd != null && jd.status.Equals("OPEN"))
             {
                 try
                 {
+                    int var1, var2;
+                    var1 = 1;
+                    var2 = 1;
                     ScriptEngine engine = Python.CreateEngine();
                     ScriptScope scope = engine.CreateScope();
                     engine.Execute(jd.code, scope);
                     dynamic testFunction = scope.GetVariable("test_func");
-                    var result = testFunction();
-                    jd.result = result;
+                    int result = testFunction(var1, var2);
+                    jd.result = result.ToString();
                     jd.status = "DONE";
                     return jd;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine("Error! " + e.Message);
                     return null;
                 }
             }
