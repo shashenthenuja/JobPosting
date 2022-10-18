@@ -26,6 +26,23 @@ namespace GUI
         public MainWindow()
         {
             InitializeComponent();
+            Program ServerThread = new Program();
+            ServerThread.Start();
+        }
+
+        private void postJob_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void attachFile_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void viewJobs_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
