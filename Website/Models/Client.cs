@@ -7,5 +7,6 @@
         public string Port { get; set; }
         public string Status { get; set; }
         public string JobId { get; set; }
+        public int Count { get; set; }
     }
 }
