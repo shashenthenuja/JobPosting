@@ -1,0 +1,74 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    @using DataAccessLayer.Models;
+    @model List<Client>;
+}
+<div id="tableview">
+    <table id="clients">
+    </table>
+</div>
+
+<div id="tableview">
+    <table id="jobs">
+    </table>
+</div>
+
+<script>
+    
+    function showClients() 
+    {
+        $.ajax({
+            url: '/home/getclients/',
+            type: 'GET',
+            success: function (data) {
+            $.each(data, function (i, centre) {
+                var rows = "<tr>" +
+                        "<td>" + centre.id + "</td>" +
+                        "<td>" + centre.centreName+ "</td>" +
+                        "</tr>";
+                        $('#clients').append(rows);
+            });
+            
+            },
+            error: function(xhr, textStatus, error)
+            {
+                console.log("Error displaying clients");
+                console.log(xhr.statusText);
+                console.log(textStatus);
+                console.log(error);
+            }
+        });
+    }
+
+    function showJobs() 
+    {
+        $.ajax({
+            url: '/home/getjobs/',
+            type: 'GET',
+            success: function (data) {
+            $.each(data, function (i, centre) {
+                var rows = "<tr>" +
+                        "<td>" + centre.id + "</td>" +
+                        "<td>" + centre.centreName+ "</td>" +
+                        "</tr>";
+                        $('#jobs').append(rows);
+            });
+            
+            },
+            error: function(xhr, textStatus, error)
+            {
+                console.log("Error displaying jobs");
+                console.log(xhr.statusText);
+                console.log(textStatus);
+                console.log(error);
+            }
+        });
+    }
+
+    function setLoad() {
+        showClients();
+        showJobs();
+    }
+</script>
