@@ -39,22 +39,16 @@ namespace GUI
         public MainWindow()
         {
             InitializeComponent();
-            Program ServerThread = new Program();
-
-            ServiceHost host;
-            NetTcpBinding tcp = new NetTcpBinding();
-            host = new ServiceHost(typeof(DataServer));
-            ServerThread.addClient(host, tcp);
-            host.Open();
-            Console.WriteLine("System Online");
-            
-            //ServerThread.Start();
+            // initialize server thread and start
+            Program ServerThread = new Program();            
+            ServerThread.Start();
             Id = ServerThread.id;
             cIp = ServerThread.ip;
             cPort = ServerThread.port;
             clientId.Text = clientId.Text + ServerThread.id;
             clientIp.Text = clientIp.Text + ServerThread.ip;
             clientPort.Text = clientPort.Text + ServerThread.port;
+            // start network thread
             NetworkThread();
             
         }
@@ -94,6 +88,7 @@ namespace GUI
             }
         }
 
+        // add job to current client's job board
         private async void AssignJob(JobData jb)
         {
             job = jb;
@@ -167,8 +162,6 @@ namespace GUI
 
         private void viewJobs_Click(object sender, RoutedEventArgs e)
         {
-            string currentJobsData = "";
-
             RestClient restClient = new RestClient("http://localhost:54662/");
             RestRequest request = new RestRequest("api/clients/", Method.Get);
             RestResponse response = restClient.Execute(request);
@@ -178,6 +171,8 @@ namespace GUI
             RestRequest request2 = new RestRequest("api/jobs/", Method.Get);
             RestResponse response2 = restClient.Execute(request2);
             List<Job> list = JsonConvert.DeserializeObject<List<Job>>(response2.Content);
+
+            // get jobs done by the current client
 
             foreach (Job item in list)
             {
@@ -193,16 +188,16 @@ namespace GUI
                 }
             }
 
+            StringBuilder builder = new StringBuilder();
+
             foreach (Job item in currentJobs)
             {
-                currentJobsData = currentJobsData + "\n [JOB ID " + item.Id + "] : " + item.Status;
+                builder.Append("\n [JOB ID " + item.Id + "] : " + item.Status).AppendLine();
             }
 
-            currentJobs.Clear();
-
-            if (currentJobsData != "")
+            if (builder != null)
             {
-                MessageBox.Show(currentJobsData);
+                MessageBox.Show(builder.ToString());
             }else
             {
                 MessageBox.Show("No Jobs Done To Display!");
@@ -252,6 +247,7 @@ namespace GUI
 
                                 List<JobData> jobs = foob.GetJobs();
 
+                                // download and do job
                                 if (jobs.Count > 0)
                                 {
                                     Console.WriteLine(Id + " downloading job");
@@ -265,6 +261,7 @@ namespace GUI
                                         c.Port = cPort;
                                         c.Status = "WORKING";
                                         c.JobId = jd.JobId;
+                                        // updata database
                                         UpdateClient(c);
                                         JobData result = DoTask(jd);
                                         if (result != null)
@@ -300,6 +297,7 @@ namespace GUI
 
         public JobData DoTask(JobData jd)
         {
+            // do task if status is open
             if (jd != null && jd.status.Equals("OPEN"))
             {
                 try
@@ -325,11 +323,7 @@ namespace GUI
             return null;
         }
 
-        public void ShowResult(JobData jd)
-        {
-
-        }
-
+        // update database
         public void UpdateClient(Client client)
         {
             RestClient restClient = new RestClient("http://localhost:54662/");
@@ -354,6 +348,7 @@ namespace GUI
             restClient.Execute(request);
         }
 
+        // encode and hash
         public string Base64Encode(string text)
         {
             if (text != "")

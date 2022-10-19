@@ -18,19 +18,12 @@ namespace GUI
         public string port { get; set; }
         public void Start()
         {
-            //This is the actual host service system
             ServiceHost host;
-            //This represents a tcp/ip binding in the Windows network stack
             NetTcpBinding tcp = new NetTcpBinding();
-            //Bind server to the implementation of DataServer
             host = new ServiceHost(typeof(DataServer));
             addClient(host, tcp);
-            //And open the host for business!
             host.Open();
             Console.WriteLine("System Online");
-            Console.ReadLine();
-            //Don't forget to close the host after you're done!
-            host.Close();
         }
 
         public void addClient(ServiceHost host, NetTcpBinding tcp)
@@ -40,7 +33,7 @@ namespace GUI
             RestResponse response = restClient.Execute(request);
             List<Client> clientList = JsonConvert.DeserializeObject<List<Client>>(response.Content);
 
-            Console.WriteLine(">>>>>>>" + clientList.Count);
+            // assign a random port and ip to the client and add service
             int index = clientList.Count + 1;
             int portNum = rnd.Next(8000, 9000);
             string url = "net.tcp://0.0.0.0:" + portNum;
@@ -61,7 +54,7 @@ namespace GUI
             Client result = JsonConvert.DeserializeObject<Client>(restResponse.Content);
             if (result != null)
             {
-                Console.WriteLine("YAY");
+                Console.WriteLine("Added client to database");
             }
         }
     }

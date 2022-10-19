@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace GUI
 {
-    //[ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, UseSynchronizationContext = true)]
     public class DataServer : ServerInterface
     {
         private static List<JobData> jobs = new List<JobData>();
+
+        // Assign job to job board
         public void SetJob(JobData jd)
         {
             string decode = Base64Decode(jd.code);
-            Console.WriteLine(decode);
             byte[] hashData = Hash(decode);
             if (hashData.SequenceEqual(jd.hash))
             {
@@ -30,6 +30,7 @@ namespace GUI
             }
         }
 
+        // send a job from board which is not done
         [MethodImpl(MethodImplOptions.Synchronized)]
         public JobData DownloadJob()
         {
@@ -43,6 +44,7 @@ namespace GUI
             return null;
         }
 
+        // Set result to the job
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void UploadJob(JobData jd)
         {
@@ -56,6 +58,7 @@ namespace GUI
             }
         }
 
+        // Get the count of jobs which are open
         [MethodImpl(MethodImplOptions.Synchronized)]
         public List<JobData> GetJobs()
         {
@@ -70,6 +73,7 @@ namespace GUI
             return result;
         }
 
+        // decode and hash verification
         public string Base64Decode(string text)
         {
             if (text != "")
