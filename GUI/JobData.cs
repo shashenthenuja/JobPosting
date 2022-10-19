@@ -12,8 +12,8 @@ namespace GUI
         public string code { get; set; }
         public string status { get; set; }
         public string result { get; set; }
-
         public int ClientId { get; set; }
+        public byte[] hash { get; set; }
         public JobData()
         {
             JobId = 0;
@@ -21,6 +21,7 @@ namespace GUI
             code = "";
             status = "";
             result = "";
+            hash = new byte[32];
         }
     }
 }

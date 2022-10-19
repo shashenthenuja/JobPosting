@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,8 +15,19 @@ namespace GUI
         private static List<JobData> jobs = new List<JobData>();
         public void SetJob(JobData jd)
         {
-            jobs.Add(jd);
-            Console.WriteLine("Job Added [" + jobs.Count + "]");
+            string decode = Base64Decode(jd.code);
+            Console.WriteLine(decode);
+            byte[] hashData = Hash(decode);
+            if (hashData.SequenceEqual(jd.hash))
+            {
+                jd.code = decode;
+                jobs.Add(jd);
+                Console.WriteLine("Job Added [" + jobs.Count + "]");
+            }
+            else
+            {
+                Console.WriteLine("DATA IS WRONG");
+            }
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
@@ -56,6 +68,23 @@ namespace GUI
                 }
             }
             return result;
+        }
+
+        public string Base64Decode(string text)
+        {
+            if (text != "")
+            {
+                var base64EncodedBytes = Convert.FromBase64String(text);
+                return Encoding.UTF8.GetString(base64EncodedBytes);
+            }
+            return text;
+        }
+
+        public byte[] Hash(string data)
+        {
+            SHA256Managed sha256Hash = new SHA256Managed();
+            byte[] hash = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return hash;
         }
     }
 }

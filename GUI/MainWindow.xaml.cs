@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
@@ -96,6 +97,14 @@ namespace GUI
         private async void AssignJob(JobData jb)
         {
             job = jb;
+
+            // encode and generate hash
+            string encodeData = Base64Encode(job.code);
+            byte[] hashData = Hash(job.code);
+
+            job.code = encodeData;
+            job.hash = hashData;
+
             Task<Job> task = new Task<Job>(SetJob);
             task.Start();
             Job data = await task;
@@ -343,6 +352,23 @@ namespace GUI
             RestRequest request = new RestRequest("api/clients/{id}", Method.Delete);
             request.AddParameter("id", id);
             restClient.Execute(request);
+        }
+
+        public string Base64Encode(string text)
+        {
+            if (text != "")
+            {
+                var textBytes = Encoding.UTF8.GetBytes(text);
+                return Convert.ToBase64String(textBytes);
+            }
+            return text;
+        }
+
+        public byte[] Hash(string data)
+        {
+            SHA256Managed sha256Hash = new SHA256Managed();
+            byte[] hash = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(data));
+            return hash;
         }
     }
 }

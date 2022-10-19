@@ -2,17 +2,40 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @{
-    @using DataAccessLayer.Models;
-    @model List<Client>;
 }
+
+<div id="tableview">
+    Auto Refresh in <span id="time">01:00</span> second(s)!
+</div>
+
 <div id="tableview">
     <table id="clients">
+        <caption>Client List</caption>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Ip</th>
+            <th>Port</th>
+            <th>Status</th>
+            <th>Job Id</th>
+        <tr>
+        </thead>
     </table>
 </div>
 
 <div id="tableview">
     <table id="jobs">
+        <caption>Job List</caption>
+        <thead>
+        <tr>
+            <th>Job Id</th>
+            <th>Status</th>
+        <tr>
+        </thead>
     </table>
+</div>
+
+<div id="tableview">
 </div>
 
 <script>
@@ -23,12 +46,36 @@
             url: '/home/getclients/',
             type: 'GET',
             success: function (data) {
-            $.each(data, function (i, centre) {
-                var rows = "<tr>" +
-                        "<td>" + centre.id + "</td>" +
-                        "<td>" + centre.centreName+ "</td>" +
+            $.each(data, function (i, client) {
+                if (client.status == "OPEN") {
+                    var rows = "<tr>" +
+                        "<td>" + client.id + "</td>" +
+                        "<td>" + client.ip + "</td>" +
+                        "<td>" + client.port + "</td>" +
+                        "<td class=" + "open" + ">" + client.status + "</td>" +
+                        "<td>" + client.jobId + "</td>" +
                         "</tr>";
-                        $('#clients').append(rows);
+                    $('#clients').append(rows);
+                } else if (client.status == "DONE") {
+                    var rows = "<tr>" +
+                        "<td>" + client.id + "</td>" +
+                        "<td>" + client.ip + "</td>" +
+                        "<td>" + client.port + "</td>" +
+                        "<td class=" + "done" + ">" + client.status + "</td>" +
+                        "<td>" + client.jobId + "</td>" +
+                        "</tr>";
+                    $('#clients').append(rows);
+                } else if (client.status == "DEAD") {
+                    var rows = "<tr>" +
+                        "<td>" + client.id + "</td>" +
+                        "<td>" + client.ip + "</td>" +
+                        "<td>" + client.port + "</td>" +
+                        "<td class=" + "dead" + ">" + client.status + "</td>" +
+                        "<td>" + client.jobId + "</td>" +
+                        "</tr>";
+                    $('#clients').append(rows);
+                }
+                
             });
             
             },
@@ -48,12 +95,21 @@
             url: '/home/getjobs/',
             type: 'GET',
             success: function (data) {
-            $.each(data, function (i, centre) {
-                var rows = "<tr>" +
-                        "<td>" + centre.id + "</td>" +
-                        "<td>" + centre.centreName+ "</td>" +
+            $.each(data, function (i, job) {
+                if (job.status == "OPEN") {
+                    var rows = "<tr>" +
+                        "<td>" + job.id + "</td>" +
+                        "<td class=" + "open" + ">" + job.status + "</td>" +
                         "</tr>";
-                        $('#jobs').append(rows);
+                    $('#jobs').append(rows);
+                } else if (job.status == "DONE") {
+                    var rows = "<tr>" +
+                        "<td>" + job.id + "</td>" +
+                        "<td class=" + "done" + ">" + job.status + "</td>" +
+                        "</tr>";
+                    $('#jobs').append(rows);
+                }
+               
             });
             
             },
@@ -67,8 +123,28 @@
         });
     }
 
+    function countdown(duration, display) {
+        var timer = duration, minutes, seconds;
+        setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                timer = duration;
+            }
+    }, 1000);
+}
+
     function setLoad() {
         showClients();
         showJobs();
+        var oneMin = 60,
+        display = document.querySelector('#time');
+        countdown(oneMin, display);
     }
 </script>
