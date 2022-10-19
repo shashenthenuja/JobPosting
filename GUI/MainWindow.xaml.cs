@@ -197,7 +197,7 @@ namespace GUI
 
             if (builder.ToString() != "")
             {
-                MessageBox.Show(builder.ToString());
+                MessageBox.Show(builder.ToString() + "\n [" + currentJobs.Count.ToString() + "] Job(s) Done");
             }else
             {
                 MessageBox.Show("No Jobs Done To Display!");
