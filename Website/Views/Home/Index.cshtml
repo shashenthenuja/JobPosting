@@ -108,6 +108,12 @@
                         "<td class=" + "done" + ">" + job.status + "</td>" +
                         "</tr>";
                     $('#jobs').append(rows);
+                } else if (job.status == "CLOSED") {
+                    var rows = "<tr>" +
+                        "<td>" + job.id + "</td>" +
+                        "<td class=" + "closed" + ">" + job.status + "</td>" +
+                        "</tr>";
+                    $('#jobs').append(rows);
                 }
                
             });

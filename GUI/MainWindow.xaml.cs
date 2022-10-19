@@ -195,7 +195,7 @@ namespace GUI
                 builder.Append("\n [JOB ID " + item.Id + "] : " + item.Status).AppendLine();
             }
 
-            if (builder != null)
+            if (builder.ToString() != "")
             {
                 MessageBox.Show(builder.ToString());
             }else
@@ -312,12 +312,14 @@ namespace GUI
                     int result = testFunction(var1, var2);
                     jd.result = result.ToString();
                     jd.status = "DONE";
+                    Console.WriteLine("Result : " + jd.result);
                     return jd;
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Error! " + e.Message);
-                    return null;
+                    jd.status = "CLOSED";
+                    return jd;
                 }
             }
             return null;
