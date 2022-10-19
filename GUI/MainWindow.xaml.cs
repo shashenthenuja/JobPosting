@@ -34,6 +34,7 @@ namespace GUI
         private string Id;
         private string cIp;
         private string cPort;
+        private List<Job> currentJobs = new List<Job>();
         public MainWindow()
         {
             InitializeComponent();
@@ -118,8 +119,6 @@ namespace GUI
             foobFactory1 = new ChannelFactory<ServerInterface>(tcp, URL);
             foob1 = foobFactory1.CreateChannel();
 
-            Console.WriteLine("Connected");
-
             foob1.SetJob(job);
 
             Console.WriteLine("Job Set");
@@ -157,7 +156,7 @@ namespace GUI
 
         private void viewJobs_Click(object sender, RoutedEventArgs e)
         {
-            string currentJobs="";
+            string currentJobsData = "";
 
             RestClient restClient = new RestClient("http://localhost:54662/");
             RestRequest request = new RestRequest("api/clients/", Method.Get);
@@ -177,12 +176,25 @@ namespace GUI
                     {
                         if (item.Id.Equals(c.JobId))
                         {
-                            currentJobs = currentJobs + "\n" + item.Id + " : " + item.Status;
+                            currentJobs.Add(item);
                         }
                     }
                 }
             }
-            MessageBox.Show(currentJobs);
+
+            foreach (Job item in currentJobs)
+            {
+                currentJobsData = currentJobsData + "\n [JOB ID " + item.Id + "] : " + item.Status;
+            }
+
+            if (currentJobsData != "")
+            {
+                MessageBox.Show(currentJobsData);
+            }else
+            {
+                MessageBox.Show("No Jobs Done To Display!");
+            }
+            
         }
 
         public async void NetworkThread()
@@ -210,50 +222,60 @@ namespace GUI
                 {
                     foreach (Client item in clienList)
                     {
-                        if (item.Id.ToString() != Id)
+                        if (item.Id.ToString() != Id && !item.Status.Equals("DEAD"))
                         {
-                            ChannelFactory<ServerInterface> foobFactory;
-
-                            NetTcpBinding tcp = new NetTcpBinding();
-
-                            Console.WriteLine(Id + " trying to connect to " + item.Id);
-
-                            string URL = "net.tcp://" + item.Ip + ":" + item.Port;
-                            foobFactory = new ChannelFactory<ServerInterface>(tcp, URL);
-                            foob = foobFactory.CreateChannel();
-
-                            List<JobData> jobs = foob.GetJobs();
-
-                            if (jobs.Count > 0)
+                            try
                             {
-                                Console.WriteLine(Id + " downloading job");
-                                JobData jd = foob.DownloadJob();
+                                ChannelFactory<ServerInterface> foobFactory;
 
-                                if (jd.status.Equals("OPEN"))
+                                NetTcpBinding tcp = new NetTcpBinding();
+
+                                Console.WriteLine(Id + " trying to connect to " + item.Id);
+
+                                string URL = "net.tcp://" + item.Ip + ":" + item.Port;
+                                foobFactory = new ChannelFactory<ServerInterface>(tcp, URL);
+                                foob = foobFactory.CreateChannel();
+
+                                List<JobData> jobs = foob.GetJobs();
+
+                                if (jobs.Count > 0)
                                 {
-                                    Client c = new Client();
-                                    c.Id = Int32.Parse(Id);
-                                    c.Ip = cIp;
-                                    c.Port = cPort;
-                                    c.Status = "WORKING";
-                                    c.JobId = jd.JobId;
-                                    UpdateClient(c);
-                                    JobData result = DoTask(jd);
-                                    if (result != null)
+                                    Console.WriteLine(Id + " downloading job");
+                                    JobData jd = foob.DownloadJob();
+
+                                    if (jd.status.Equals("OPEN"))
                                     {
-                                        Job resultData = new Job();
-                                        resultData.Id = result.JobId;
-                                        resultData.Status = result.status;
-                                        c.Status = "DONE";
-                                        UpdateJob(resultData);
+                                        Client c = new Client();
+                                        c.Id = Int32.Parse(Id);
+                                        c.Ip = cIp;
+                                        c.Port = cPort;
+                                        c.Status = "WORKING";
+                                        c.JobId = jd.JobId;
                                         UpdateClient(c);
-                                        Console.WriteLine(result.JobId + " : " + result.status);
-                                        return result;
+                                        JobData result = DoTask(jd);
+                                        if (result != null)
+                                        {
+                                            Job resultData = new Job();
+                                            resultData.Id = result.JobId;
+                                            resultData.Status = result.status;
+                                            c.Status = "DONE";
+                                            UpdateJob(resultData);
+                                            UpdateClient(c);
+                                            Console.WriteLine(result.JobId + " : " + result.status);
+                                            return result;
+                                        }
                                     }
                                 }
-                            }else
+                                else
+                                {
+                                    Console.WriteLine("No Jobs");
+                                }
+                            }
+                            catch (Exception)
                             {
-                                Console.WriteLine("No Jobs");
+                                item.Status = "DEAD";
+                                UpdateClient(item);
+                                Console.WriteLine("Removed Dead Client [" + item.Id + "]");
                             }
                         }
                     }
@@ -302,6 +324,14 @@ namespace GUI
             RestClient restClient = new RestClient("http://localhost:54662/");
             RestRequest request = new RestRequest("api/jobs/?id=" + job.Id, Method.Put);
             request.AddBody(JsonConvert.SerializeObject(job));
+            restClient.Execute(request);
+        }
+
+        public void RemoveDeadClients(int id)
+        {
+            RestClient restClient = new RestClient("http://localhost:54662/");
+            RestRequest request = new RestRequest("api/clients/{id}", Method.Delete);
+            request.AddParameter("id", id);
             restClient.Execute(request);
         }
     }
