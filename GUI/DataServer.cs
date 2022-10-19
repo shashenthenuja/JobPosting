@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace GUI
 {
-    [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, UseSynchronizationContext = true)]
+    //[ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, UseSynchronizationContext = true)]
     public class DataServer : ServerInterface
     {
         private static List<JobData> jobs = new List<JobData>();
@@ -17,6 +18,7 @@ namespace GUI
             Console.WriteLine("Job Added [" + jobs.Count + "]");
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public JobData DownloadJob()
         {
             foreach (JobData item in jobs)
@@ -29,6 +31,7 @@ namespace GUI
             return null;
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public void UploadJob(JobData jd)
         {
             foreach (JobData item in jobs)
@@ -40,6 +43,8 @@ namespace GUI
                 }
             }
         }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public List<JobData> GetJobs()
         {
             List<JobData> result = new List<JobData>();

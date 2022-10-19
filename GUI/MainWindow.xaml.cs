@@ -75,6 +75,7 @@ namespace GUI
                 jb.code = code;
                 jb.status = "OPEN";
                 jb.JobId = index;
+                jb.ClientId = Int32.Parse(Id);
                 AssignJob(jb);
             }
             else
@@ -86,6 +87,7 @@ namespace GUI
                     jb.code = code;
                     jb.status = "OPEN";
                     jb.JobId = index;
+                    jb.ClientId = Int32.Parse(Id);
                     AssignJob(jb);
                 }
             }
@@ -187,6 +189,8 @@ namespace GUI
                 currentJobsData = currentJobsData + "\n [JOB ID " + item.Id + "] : " + item.Status;
             }
 
+            currentJobs.Clear();
+
             if (currentJobsData != "")
             {
                 MessageBox.Show(currentJobsData);
@@ -224,6 +228,7 @@ namespace GUI
                     {
                         if (item.Id.ToString() != Id && !item.Status.Equals("DEAD"))
                         {
+                            // try connections and remove dead clients if exists
                             try
                             {
                                 ChannelFactory<ServerInterface> foobFactory;
@@ -309,6 +314,11 @@ namespace GUI
                 }
             }
             return null;
+        }
+
+        public void ShowResult(JobData jd)
+        {
+
         }
 
         public void UpdateClient(Client client)
